@@ -1,34 +1,27 @@
 package com.example;
 
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
-import org.json.JSONObject;
+import com.dataTableInstance.StationQuery; 
+import com.dataTableInstance.RentalRecords;
+import com.dataTableInstance.EasyCardTopUp;
+import com.dataTableInstance.MaintenanceReportPage;
 
-import java.io.IOException;
-import java.util.List;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.stage.Stage; 
 
 public class Dashboard {
 
-    private final AuthService authService = new AuthService();
-    private TableView<JSONObject> table;
-    private ObservableList<JSONObject> data;
-    private ComboBox<String> cityDropdown;
-    private ComboBox<String> bikeTypeDropdown;
-    private int currentPage = 0;
-    private final int pageSize = 50;
-    private Label pageInfoLabel;
-    private int totalDataCount = 0;
+    private String currentUserPhoneNumber;
 
-    @SuppressWarnings("unchecked")
+    public Dashboard(String currentUserPhoneNumber) {
+        this.currentUserPhoneNumber = currentUserPhoneNumber;
+    }
+
     public void start(@SuppressWarnings("exports") Stage primaryStage) {
         primaryStage.setTitle("Dashboard");
 
@@ -36,130 +29,115 @@ public class Dashboard {
         grid.setVgap(10);
         grid.setHgap(10);
         grid.setPadding(new Insets(20, 20, 20, 20));
-
-        cityDropdown = new ComboBox<>();
-        bikeTypeDropdown = new ComboBox<>(FXCollections.observableArrayList("1.0", "2.0"));
-        bikeTypeDropdown.setValue("1.0");
-
-        Button fetchDataButton = new Button("Fetch Data");
-        fetchDataButton.setOnAction(e -> {
-            currentPage = 0;
-            String city = cityDropdown.getValue();
-            String bikeType = bikeTypeDropdown.getValue();
-            fetchData(city, bikeType, currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-        });
-
-        Button nextPageButton = new Button("下一頁");
-        nextPageButton.setOnAction(e -> {
-            if ((currentPage + 1) * pageSize < totalDataCount) {
-                currentPage++;
-                String city = cityDropdown.getValue();
-                String bikeType = bikeTypeDropdown.getValue();
-                fetchData(city, bikeType, currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-            }
-        });
-
-        Button prevPageButton = new Button("上一頁");
-        prevPageButton.setOnAction(e -> {
-            if (currentPage > 0) {
-                currentPage--;
-                String city = cityDropdown.getValue();
-                String bikeType = bikeTypeDropdown.getValue();
-                fetchData(city, bikeType, currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-            }
-        });
-
-        pageInfoLabel = new Label("第 1 頁 / 總共 1 頁");
-
-        bikeTypeDropdown.setOnAction(e -> updateCityDropdown(cityDropdown, bikeTypeDropdown.getValue()));
-
-        HBox buttonBox = new HBox(10);
-        buttonBox.getChildren().addAll(prevPageButton, nextPageButton, pageInfoLabel);
-        buttonBox.setSpacing(10);
-        buttonBox.setAlignment(Pos.CENTER);
-
-        grid.add(new Label("City:"), 0, 0);
-        grid.add(cityDropdown, 1, 0);
-        grid.add(new Label("Bike Type:"), 0, 1);
-        grid.add(bikeTypeDropdown, 1, 1);
-        grid.add(fetchDataButton, 0, 2);
-        grid.add(buttonBox, 0, 3, 2, 1);
-
-        table = new TableView<>();
-        data = FXCollections.observableArrayList();
-        table.setItems(data);
-
-        TableColumn<JSONObject, String> cityCol = new TableColumn<>("縣市");
-        cityCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().optString("city", "N/A")));
         
-        TableColumn<JSONObject, String> regionCol = new TableColumn<>("區域");
-        regionCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().optString("region", "N/A")));
-        
-        TableColumn<JSONObject, String> nameCol = new TableColumn<>("站點名稱");
-        nameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().optString("name", "N/A")));
-        nameCol.setPrefWidth(250);
-        
-        TableColumn<JSONObject, String> totalDocksCol = new TableColumn<>("車位數");
-        totalDocksCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().optString("total_docks", "N/A")));
-        
-        TableColumn<JSONObject, String> availableBikesCol = new TableColumn<>("可借車輛");
-        availableBikesCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().optString("available_bikes", "N/A")));
-        
-        TableColumn<JSONObject, String> availableDocksCol = new TableColumn<>("可停空位");
-        availableDocksCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().optString("available_docks", "N/A")));
-        
-        TableColumn<JSONObject, String> bikeTypeCol = new TableColumn<>("車種版本，1.0 或 2.0");
-        bikeTypeCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().optString("bike_type", "N/A")));
+        // 設置列的寬度比例
+        grid.getColumnConstraints().add(createColumnConstraint());
+        grid.getColumnConstraints().add(createColumnConstraint());
+        grid.getColumnConstraints().add(createColumnConstraint());
 
-        table.getColumns().addAll(cityCol, regionCol, nameCol, totalDocksCol, availableBikesCol, availableDocksCol, bikeTypeCol);
+        Button stationQueryButton = new Button("站位查詢");
+        stationQueryButton.setOnAction(e -> showStationQueryPage(primaryStage));
 
-        grid.add(table, 0, 4, 2, 1);
+        Button rentalRecordButton = new Button("租還車紀錄查詢");
+        rentalRecordButton.setOnAction(e -> showRentalRecordsPage(primaryStage));
 
-        Scene scene = new Scene(grid, 1000, 600);
+        Button easyCardTopUpButton = new Button("悠遊卡儲值");
+        easyCardTopUpButton.setOnAction(e -> showEasyCardTopUpPage(primaryStage));
+
+        Button rentBikeButton = new Button("租車");
+        rentBikeButton.setOnAction(e -> showRentBikePage(primaryStage));
+
+        Button returnBikeButton = new Button("還車");
+        returnBikeButton.setOnAction(e -> showReturnBikePage(primaryStage));
+
+        Button maintenanceReportButton = new Button("維修通報");
+        maintenanceReportButton.setOnAction(e -> showMaintenanceReportPage(primaryStage));
+        
+        Button logoutButton = new Button("登出");
+        logoutButton.setOnAction(e -> logout(primaryStage));
+        
+        stationQueryButton.setMaxWidth(Double.MAX_VALUE);
+        rentalRecordButton.setMaxWidth(Double.MAX_VALUE);
+        easyCardTopUpButton.setMaxWidth(Double.MAX_VALUE);
+        rentBikeButton.setMaxWidth(Double.MAX_VALUE);
+        returnBikeButton.setMaxWidth(Double.MAX_VALUE);
+        maintenanceReportButton.setMaxWidth(Double.MAX_VALUE);
+        logoutButton.setMaxWidth(Double.MAX_VALUE);
+        
+        stationQueryButton.setMinWidth(100);
+        rentalRecordButton.setMinWidth(100);
+        easyCardTopUpButton.setMinWidth(100);
+        rentBikeButton.setMinWidth(100);
+        returnBikeButton.setMinWidth(100);
+        maintenanceReportButton.setMinWidth(100);
+        logoutButton.setMinWidth(100);
+
+        GridPane.setConstraints(logoutButton, 2, 0); // 將登出按鈕放在最右上角
+
+        grid.add(stationQueryButton, 0, 1);
+        grid.add(rentalRecordButton, 0, 2);
+        grid.add(easyCardTopUpButton, 0, 3);
+        grid.add(rentBikeButton, 1, 1);
+        grid.add(returnBikeButton, 1, 2);
+        grid.add(maintenanceReportButton, 1, 3);
+        grid.add(logoutButton, 2, 0);
+        
+        GridPane.setMargin(stationQueryButton, new Insets(10));
+        GridPane.setMargin(rentalRecordButton, new Insets(10));
+        GridPane.setMargin(easyCardTopUpButton, new Insets(10));
+        GridPane.setMargin(rentBikeButton, new Insets(10));
+        GridPane.setMargin(returnBikeButton, new Insets(10));
+        GridPane.setMargin(maintenanceReportButton, new Insets(10));
+        GridPane.setMargin(logoutButton, new Insets(10));
+
+        Scene scene = new Scene(grid, 400, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        updateCityDropdown(cityDropdown, bikeTypeDropdown.getValue());
     }
 
-    private void updateCityDropdown(ComboBox<String> cityDropdown, String bikeType) {
-        new Thread(() -> {
-            try {
-                List<String> cities = authService.fetchCities(bikeType);
-                Platform.runLater(() -> {
-                    cityDropdown.getItems().clear();
-                    cityDropdown.getItems().add("All");
-                    cityDropdown.getItems().addAll(cities);
-                    cityDropdown.setValue("All");
-
-                    String selectedCity = cityDropdown.getValue();
-                    fetchData(selectedCity, bikeType, currentPage * pageSize, (currentPage + 1) * pageSize - 1);
-                });
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+    private ColumnConstraints createColumnConstraint() {
+        ColumnConstraints column = new ColumnConstraints();
+        column.setHgrow(Priority.ALWAYS);
+        column.setFillWidth(true);
+        return column;
+    }
+    
+    private void showStationQueryPage(Stage primaryStage) {
+        StationQuery stationQuery = new StationQuery(currentUserPhoneNumber);
+        stationQuery.start(primaryStage);
     }
 
-    private void fetchData(String city, String bikeType, int start, int end) {
-        new Thread(() -> {
-            try {
-                totalDataCount = authService.fetchTotalDataCount(city, bikeType);
-                List<JSONObject> fetchedData = authService.fetchData(city, bikeType, start, end);
-                Platform.runLater(() -> {
-                    data.clear();
-                    data.addAll(fetchedData);
-                    table.scrollTo(0);
-                    updatePageInfo();
-                });
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+    private void showRentalRecordsPage(Stage primaryStage) {
+        RentalRecords rentalRecords = new RentalRecords(currentUserPhoneNumber);
+        rentalRecords.start(primaryStage);
     }
 
-    private void updatePageInfo() {
-        int totalPages = (totalDataCount + pageSize - 1) / pageSize;
-        pageInfoLabel.setText(String.format("第 %d 頁 / 總共 %d 頁，共 %d 筆資料", currentPage + 1, totalPages, totalDataCount));
+    private void showEasyCardTopUpPage(Stage primaryStage) {
+        EasyCardTopUp easyCardTopUpPage = new EasyCardTopUp(currentUserPhoneNumber);
+        easyCardTopUpPage.start(primaryStage);
+    }
+
+    private void showRentBikePage(Stage primaryStage) {
+        // TODO: 打開租車頁面
+        System.out.println("租車頁面");
+    }
+
+    private void showReturnBikePage(Stage primaryStage) {
+        // TODO: 打開還車頁面
+        System.out.println("還車頁面");
+    }
+
+    private void showMaintenanceReportPage(Stage primaryStage) {
+        MaintenanceReportPage maintenanceReportPage = new MaintenanceReportPage(currentUserPhoneNumber);
+        maintenanceReportPage.showMaintenanceReportPage(primaryStage);
+    }
+    
+    private void logout(Stage primaryStage) {
+        primaryStage.close();
+        Platform.runLater(() -> {
+            Main main = new Main();
+            Stage newStage = new Stage();
+            main.start(newStage);
+        });
     }
 }
