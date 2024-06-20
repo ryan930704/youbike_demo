@@ -28,9 +28,11 @@ public class RentalRecords {
 	private Label pageInfoLabel;
 	private int totalDataCount = 0;
     private String currentUserPhoneNumber;
+    private String easyCardNumber;
 	
-    public RentalRecords(String currentUserPhoneNumber) {
+    public RentalRecords(String currentUserPhoneNumber, String easyCardNumber) {
         this.currentUserPhoneNumber = currentUserPhoneNumber;
+        this.easyCardNumber = easyCardNumber;
     }
 
 	@SuppressWarnings("unchecked")
@@ -105,7 +107,7 @@ public class RentalRecords {
 		Button backButton = new Button("返回主頁面");
 		backButton.setOnAction(e -> {
 			primaryStage.close();
-			new Dashboard(currentUserPhoneNumber).start(new Stage());
+			new Dashboard(currentUserPhoneNumber, easyCardNumber).start(new Stage());
 		});
 
 		grid.add(backButton, 0, 5);  

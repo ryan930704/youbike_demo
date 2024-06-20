@@ -17,9 +17,11 @@ import java.util.List;
 public class MaintenanceReportPage {
 
     private String currentUserPhoneNumber;
+    private String easyCardNumber;
 
-    public MaintenanceReportPage(String currentUserPhoneNumber) {
+    public MaintenanceReportPage(String currentUserPhoneNumber, String easyCardNumber) {
         this.currentUserPhoneNumber = currentUserPhoneNumber;
+        this.easyCardNumber = easyCardNumber;
     }
 
     public void showMaintenanceReportPage(Stage primaryStage) {
@@ -78,7 +80,7 @@ public class MaintenanceReportPage {
         Button backButton = new Button("返回主頁面");
         backButton.setOnAction(e -> {
             primaryStage.close();
-            new Dashboard(currentUserPhoneNumber).start(new Stage());
+            new Dashboard(currentUserPhoneNumber, easyCardNumber).start(new Stage());
         });
         GridPane.setConstraints(backButton, 0, 5);
 

@@ -19,8 +19,9 @@ public class EasyCardTopUp {
     private String currentUserPhoneNumber;
     private String easyCardNumber;
 
-    public EasyCardTopUp(String currentUserPhoneNumber) {
+    public EasyCardTopUp(String currentUserPhoneNumber, String easyCardNumber) {
         this.currentUserPhoneNumber = currentUserPhoneNumber;
+        this.easyCardNumber = easyCardNumber;
     }
 
     public void start(Stage primaryStage) {
@@ -34,7 +35,7 @@ public class EasyCardTopUp {
         // EasyCard Number Field
         Label easyCardLabel = new Label("悠遊卡卡號:");
         GridPane.setConstraints(easyCardLabel, 0, 0);
-        TextField easyCardInput = new TextField();
+        TextField easyCardInput = new TextField(easyCardNumber);
         easyCardInput.setDisable(true);
         GridPane.setConstraints(easyCardInput, 1, 0);
 
@@ -59,7 +60,7 @@ public class EasyCardTopUp {
         Button backButton = new Button("返回主頁面");
         backButton.setOnAction(e -> {
             primaryStage.close();
-            new Dashboard(currentUserPhoneNumber).start(new Stage());
+            new Dashboard(currentUserPhoneNumber, easyCardNumber).start(new Stage());
         });
         GridPane.setConstraints(backButton, 0, 4);
 
@@ -72,18 +73,8 @@ public class EasyCardTopUp {
         // Load EasyCard Information
         new Thread(() -> {
             try {
-                JSONObject memberInfo = authService.getMemberInfo(currentUserPhoneNumber);
-                Platform.runLater(() -> {
-                    try {
-                        easyCardNumber = memberInfo.getString("easycard_number");
-                        easyCardInput.setText(easyCardNumber);
-
-                        JSONObject easyCardInfo = authService.getEasyCardInfo(easyCardNumber);
-                        balanceInput.setText(String.valueOf(easyCardInfo.getDouble("balance")));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
+                JSONObject easyCardInfo = authService.getEasyCardInfo(easyCardNumber);
+                Platform.runLater(() -> balanceInput.setText(String.valueOf(easyCardInfo.getDouble("balance"))));
             } catch (IOException e) {
                 e.printStackTrace();
             }

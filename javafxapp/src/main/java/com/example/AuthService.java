@@ -349,35 +349,37 @@ public class AuthService {
 
 	// 儲值悠遊卡
 	public void topUpEasyCard(String cardNumber, double amount) throws IOException {
-		JSONObject easyCardInfo = getEasyCardInfo(cardNumber);
-		double currentBalance = easyCardInfo.getDouble("balance");
-		double newBalance = currentBalance + amount;
+	    JSONObject easyCardInfo = getEasyCardInfo(cardNumber);
+	    double currentBalance = easyCardInfo.getDouble("balance");
+	    double newBalance = currentBalance + amount;
 
-		// 獲取當前時間並格式化
-		String currentDateTime = java.time.LocalDateTime.now().toString();
+	    // 獲取當前時間並格式化
+	    String currentDateTime = java.time.LocalDateTime.now().toString();
 
-		// 更新交易紀錄
-		String transactionRecord = easyCardInfo.optString("transaction_records", "");
-		transactionRecord += currentDateTime + ": 儲值金額: " + amount + " | 新餘額: " + newBalance + "\\n";
-		System.out.println("transactionRecord:" + transactionRecord);
+	    // 更新交易紀錄
+	    String transactionRecord = easyCardInfo.optString("transaction_records", "");
+	    transactionRecord += currentDateTime + ": 儲值金額: " + amount + " | 新餘額: " + newBalance + "\\n";
+	    System.out.println("transactionRecord:" + transactionRecord);
 
-		// 構建更新的 JSON
-		String json = "{\"balance\": " + newBalance + ", \"transaction_records\": \"" + transactionRecord + "\"}";
-		System.out.println("json:" + json);
-		RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+	    // 構建更新的 JSON，將換行符轉義
+	    String json = "{\"balance\": " + newBalance + ", \"transaction_records\": \"" + transactionRecord.replace("\n", "\\n") + "\"}";
+	    System.out.println("json:" + json);
+	    RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
 
-		HttpUrl url = HttpUrl.parse(SUPABASE_URL + "/rest/v1/easycards").newBuilder()
-				.addQueryParameter("card_number", "eq." + cardNumber).build();
-		System.out.println("url:" + url + "\n");
-		Request request = new Request.Builder().url(url).patch(body).addHeader("apikey", SUPABASE_API_KEY)
-				.addHeader("Authorization", "Bearer " + SUPABASE_API_KEY).addHeader("Prefer", "return=representation").build();
+	    HttpUrl url = HttpUrl.parse(SUPABASE_URL + "/rest/v1/easycards").newBuilder()
+	            .addQueryParameter("card_number", "eq." + cardNumber).build();
+	    System.out.println("url:" + url + "\n");
+	    Request request = new Request.Builder().url(url).patch(body).addHeader("apikey", SUPABASE_API_KEY)
+	            .addHeader("Authorization", "Bearer " + SUPABASE_API_KEY).addHeader("Prefer", "return=representation").build();
 
-		try (Response response = client.newCall(request).execute()) {
-			if (!response.isSuccessful()) {
-				throw new IOException("Unexpected code " + response);
-			}
-		}
+	    try (Response response = client.newCall(request).execute()) {
+	        if (!response.isSuccessful()) {
+	            System.out.println("Response: " + response.body().string());
+	            throw new IOException("Unexpected code " + response);
+	        }
+	    }
 	}
+
 
 	// 維修紀錄維護
 	public void reportMaintenance(int stationId, int dockNumber, String bikeNumber, String report, String maintenanceItems) {
@@ -455,6 +457,12 @@ public class AuthService {
 			}
 			return stationIds;
 		}
+	}
+	
+	// 獲取用戶的悠遊卡卡號
+	public String getEasyCardNumber(String phoneNumber) throws IOException {
+	    JSONObject memberInfo = getMemberInfo(phoneNumber);
+	    return memberInfo.getString("easycard_number");
 	}
 
 }

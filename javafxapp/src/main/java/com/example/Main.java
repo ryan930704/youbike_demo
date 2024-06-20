@@ -1,5 +1,7 @@
 package com.example;
 
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -11,7 +13,8 @@ import javafx.application.Platform;
 public class Main extends Application {
 
     private final AuthService authService = new AuthService();
-    private String currentUserPhoneNumber; // 新增變量來保存當前用戶的手機號碼
+    private String currentUserPhoneNumber;
+    private String easyCardNumber;
 
     @Override
     public void start(@SuppressWarnings("exports") Stage primaryStage) {
@@ -80,8 +83,13 @@ public class Main extends Application {
             authService.login(phoneInput.getText(), passwordInput.getText(), new AuthService.LoginCallback() {
                 @Override
                 public void onSuccess() {
-                    currentUserPhoneNumber = phoneInput.getText(); // 設置當前用戶的手機號碼
-                    showDashboard(primaryStage);
+                    currentUserPhoneNumber = phoneInput.getText();
+                    try {
+                        easyCardNumber = authService.getEasyCardNumber(currentUserPhoneNumber);
+                        showDashboard(primaryStage);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
 
                 @Override
@@ -145,7 +153,7 @@ public class Main extends Application {
 
     private void showDashboard(Stage primaryStage) {
         Platform.runLater(() -> {
-            Dashboard dashboard = new Dashboard(currentUserPhoneNumber); // 傳遞當前用戶的手機號碼
+            Dashboard dashboard = new Dashboard(currentUserPhoneNumber, easyCardNumber);
             dashboard.start(primaryStage);
         });
     }

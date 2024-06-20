@@ -31,9 +31,11 @@ public class StationQuery {
 	private Label pageInfoLabel;
 	private int totalDataCount = 0;
     private String currentUserPhoneNumber;
+    private String easyCardNumber;
 	
-    public StationQuery(String currentUserPhoneNumber) {
+    public StationQuery(String currentUserPhoneNumber, String easyCardNumber) {
         this.currentUserPhoneNumber = currentUserPhoneNumber;
+        this.easyCardNumber = easyCardNumber;
     }
 
 	/**
@@ -136,8 +138,8 @@ public class StationQuery {
 		// 新增返回按鈕
 		Button backButton = new Button("返回主頁面");
 		backButton.setOnAction(e -> {
-			primaryStage.close();
-			new Dashboard(currentUserPhoneNumber).start(new Stage());
+		    primaryStage.close();
+		    new Dashboard(currentUserPhoneNumber, easyCardNumber).start(new Stage());
 		});
 
 		grid.add(backButton, 0, 5);  

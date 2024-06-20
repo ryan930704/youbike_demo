@@ -17,9 +17,11 @@ import javafx.stage.Stage;
 public class Dashboard {
 
     private String currentUserPhoneNumber;
+    private String easyCardNumber; 
 
-    public Dashboard(String currentUserPhoneNumber) {
+    public Dashboard(String currentUserPhoneNumber, String easyCardNumber) {
         this.currentUserPhoneNumber = currentUserPhoneNumber;
+        this.easyCardNumber = easyCardNumber;
     }
 
     public void start(@SuppressWarnings("exports") Stage primaryStage) {
@@ -103,17 +105,17 @@ public class Dashboard {
     }
     
     private void showStationQueryPage(Stage primaryStage) {
-        StationQuery stationQuery = new StationQuery(currentUserPhoneNumber);
+        StationQuery stationQuery = new StationQuery(currentUserPhoneNumber, easyCardNumber);
         stationQuery.start(primaryStage);
     }
 
     private void showRentalRecordsPage(Stage primaryStage) {
-        RentalRecords rentalRecords = new RentalRecords(currentUserPhoneNumber);
+        RentalRecords rentalRecords = new RentalRecords(currentUserPhoneNumber, easyCardNumber);
         rentalRecords.start(primaryStage);
     }
 
     private void showEasyCardTopUpPage(Stage primaryStage) {
-        EasyCardTopUp easyCardTopUpPage = new EasyCardTopUp(currentUserPhoneNumber);
+        EasyCardTopUp easyCardTopUpPage = new EasyCardTopUp(currentUserPhoneNumber, easyCardNumber);
         easyCardTopUpPage.start(primaryStage);
     }
 
@@ -128,7 +130,7 @@ public class Dashboard {
     }
 
     private void showMaintenanceReportPage(Stage primaryStage) {
-        MaintenanceReportPage maintenanceReportPage = new MaintenanceReportPage(currentUserPhoneNumber);
+        MaintenanceReportPage maintenanceReportPage = new MaintenanceReportPage(currentUserPhoneNumber, easyCardNumber);
         maintenanceReportPage.showMaintenanceReportPage(primaryStage);
     }
     
